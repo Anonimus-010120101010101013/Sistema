@@ -102,13 +102,7 @@ h1{
 
 <script>
 const scene = new THREE.Scene();
-
-const camera = new THREE.PerspectiveCamera(
-    75,
-    window.innerWidth/window.innerHeight,
-    0.1,
-    100000
-);
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 100000);
 camera.position.set(0,200,500);
 
 const renderer = new THREE.WebGLRenderer({antialias:true});
@@ -142,7 +136,6 @@ scene.add(new THREE.AmbientLight(0x666666));
 
 /* PLANETAS */
 const planetMeshes = [];
-
 function crearPlaneta(nombre,size,texture,dist){
     const mesh = new THREE.Mesh(
         new THREE.SphereGeometry(size,64,64),
@@ -197,7 +190,6 @@ const moon = new THREE.Mesh(
     new THREE.MeshStandardMaterial({map:loader.load("textures/moon.jpg")})
 );
 scene.add(moon);
-
 let moonAngle = 0;
 
 /* ESTRELLAS */
@@ -247,26 +239,38 @@ function verificarCodigo(){
     }
 }
 
-/* CLICK PLANETAS */
+/* SELECCION PLANETAS (ESCRITORIO + MOVIL) */
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 let planetaSeleccionado = null;
 
-window.addEventListener("click",function(event){
-    if(event.target.closest("#menu")) return;
-    mouse.x = (event.clientX/window.innerWidth)*2-1;
-    mouse.y = -(event.clientY/window.innerHeight)*2+1;
-    raycaster.setFromCamera(mouse,camera);
+function seleccionarPlaneta(clientX, clientY){
+    mouse.x = (clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(clientY / window.innerHeight) * 2 + 1;
+    raycaster.setFromCamera(mouse, camera);
     const intersects = raycaster.intersectObjects(planetMeshes);
-    if(intersects.length>0){
+    if(intersects.length > 0){
         const planeta = intersects[0].object;
         planetaSeleccionado = planeta;
         document.getElementById("planetName").innerText = planeta.userData.nombre;
-        document.getElementById("menu").style.display="block";
-    }else{
+        document.getElementById("menu").style.display = "block";
+    } else {
         planetaSeleccionado = null;
-        document.getElementById("menu").style.display="none";
+        document.getElementById("menu").style.display = "none";
     }
+}
+
+// Escritorio
+window.addEventListener("click", function(event){
+    if(event.target.closest("#menu")) return;
+    seleccionarPlaneta(event.clientX, event.clientY);
+});
+
+// Movil
+window.addEventListener("touchstart", function(event){
+    if(event.target.closest("#menu")) return;
+    const touch = event.touches[0];
+    seleccionarPlaneta(touch.clientX, touch.clientY);
 });
 
 /* ANIMACION */
@@ -314,7 +318,6 @@ function animate(){
 }
 
 animate();
-
 </script>
 </body>
 </html>
