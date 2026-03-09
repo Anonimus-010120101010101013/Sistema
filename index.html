@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Sistema Solar 3D</title>
+
+<style>
+
+body{
+margin:0;
+overflow:hidden;
+background:black;
+}
+
+h1{
+position:absolute;
+top:10px;
+width:100%;
+text-align:center;
+color:white;
+font-family:Arial;
+}
+
+/* MENU */
+
+#menu{
+position:absolute;
+right:20px;
+top:80px;
+width:240px;
+padding:20px;
+background:rgba(0,0,0,0.6);
+border:1px solid cyan;
+box-shadow:0 0 20px cyan;
+color:white;
+font-family:Arial;
+display:none;
+backdrop-filter: blur(10px);
+}
+
+#menu h2{
+margin:0;
+color:cyan;
+}
+
+#menu input{
+width:93%;
+padding:8px;
+margin-top:10px;
+background:black;
+border:1px solid cyan;
+color:white;
+text-align:center;
+}
+
+#menu button{
+margin-top:10px;
+width:100%;
+padding:8px;
+background:cyan;
+border:none;
+cursor:pointer;
+font-weight:bold;
+}
+
+#mensaje{
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+background:black;
+border:2px solid cyan;
+padding:30px;
+color:white;
+font-size:20px;
+display:none;
+box-shadow:0 0 20px cyan;
+text-align:center;
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>Fraces De Planetas</h1>
+
+<div id="menu">
+
+<h2 id="planetName"></h2>
+
+<p>Planeta seleccionado</p>
+
+<p><b>CODIGO</b></p>
+
+<input id="codigo" maxlength="4" placeholder="0000">
+
+<button onclick="verificarCodigo()">Abrir</button>
+
+<p>Click en el espacio para liberar cámara</p>
+
+</div>
+
+<div id="mensaje"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128/examples/js/controls/OrbitControls.js"></script>
+
+<script>
+
+const scene = new THREE.Scene();
+
+const camera = new THREE.PerspectiveCamera(
+75,
+window.innerWidth/window.innerHeight,
+0.1,
+100000
+);
+
+camera.position.set(0,200,500);
+
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(window.innerWidth,window.innerHeight);
+document.body.appendChild(renderer.domElement);
+
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+
+/* TEXTURAS */
+
+const loader = new THREE.TextureLoader();
+
+scene.background = loader.load("textures/space.jpg");
+
+/* SOL */
+
+const sun = new THREE.Mesh(
+new THREE.SphereGeometry(40,64,64),
+new THREE.MeshBasicMaterial({map:loader.load("textures/sun.jpg")})
+);
+
+scene.add(sun);
+
+/* LUCES */
+
+scene.add(new THREE.PointLight(0xffffff,30,200000));
+scene.add(new THREE.AmbientLight(0x666666));
+
+/* PLANETAS */
+
+const planetMeshes = [];
+
+function crearPlaneta(nombre,size,texture,dist){
+
+const mesh = new THREE.Mesh(
+new THREE.SphereGeometry(size,64,64),
+new THREE.MeshPhongMaterial({map:loader.load(texture)})
+);
+
+mesh.userData.nombre = nombre;
+
+scene.add(mesh);
+
+crearOrbita(dist);
+
+planetMeshes.push(mesh);
+
+return {mesh,dist};
+
+}
+
+/* ORBITAS */
+
+function crearOrbita(dist){
+
+const curve = new THREE.EllipseCurve(0,0,dist,dist);
+
+const points = curve.getPoints(200);
+
+const geometry = new THREE.BufferGeometry().setFromPoints(
+points.map(p=>new THREE.Vector3(p.x,0,p.y))
+);
+
+const orbit = new THREE.LineLoop(
+geometry,
+new THREE.LineBasicMaterial({color:0xffffff})
+);
+
+scene.add(orbit);
+
+}
+
+/* CREAR PLANETAS */
+
+const mercury = crearPlaneta("Mercurio",4,"textures/mercury.jpg",60);
+const venus = crearPlaneta("Venus",6,"textures/venus.jpg",90);
+const earth = crearPlaneta("Tierra",7,"textures/earth.jpg",120);
+const mars = crearPlaneta("Marte",5,"textures/mars.jpg",150);
+const jupiter = crearPlaneta("Jupiter",16,"textures/jupiter.jpg",200);
+const saturn = crearPlaneta("Saturno",14,"textures/saturn.jpg",260);
+const uranus = crearPlaneta("Urano",10,"textures/uranus.jpg",320);
+const neptune = crearPlaneta("Neptuno",10,"textures/neptune.jpg",380);
+
+/* LUNA */
+
+const moon = new THREE.Mesh(
+new THREE.SphereGeometry(2,64,64),
+new THREE.MeshStandardMaterial({
+map:loader.load("textures/moon.jpg")
+})
+);
+
+scene.add(moon);
+
+let moonAngle = 0;
+
+/* ESTRELLAS */
+
+const starGeo = new THREE.BufferGeometry();
+const starVertices = [];
+
+for(let i=0;i<30000;i++){
+
+starVertices.push(
+(Math.random()-0.5)*20000,
+(Math.random()-0.5)*20000,
+(Math.random()-0.5)*20000
+);
+
+}
+
+starGeo.setAttribute(
+'position',
+new THREE.Float32BufferAttribute(starVertices,3)
+);
+
+scene.add(new THREE.Points(
+starGeo,
+new THREE.PointsMaterial({color:0xffffff})
+));
+
+/* CODIGOS PLANETAS */
+
+const codigos = {
+
+Mercurio:"1010",
+Venus:"3542",
+Tierra:"5881",
+Marte:"3665",
+Jupiter:"1132",
+Saturno:"8775",
+Urano:"6589",
+Neptuno:"8544"
+
+};
+
+/* FRASES DIA DE LA MUJER */
+
+const frases = {
+
+Mercurio:"Mujer, como Mercurio, ligera y brillante,tus pensamientos vuelan entre estrellas, pero tus pies descansan en la tierra fértil, sembrando sueños que florecen eternos. Feliz Día de la Mujer 🌸",
+Venus:"Mujer, raíz de la tierra, brillas como Venus en el cielo, tus manos cultivan vida y tu corazón irradia amor. 💜",
+Tierra:"Tus manos labran sueños tu corazón cultiva esperanza, y en cada paso que das la tierra canta tu nombre. Feliz Día de la Mujer 🌷",
+Marte:"Eres tierra que nutre, y Marte que impulsa tus pasiones, mujer, guerrera de la vida, donde pisas, florece la valentía.⭐",
+Jupiter:"Tu grandeza no tiene límites 🌟",
+Saturno:"Como los anillos de Saturno, tu esencia es única 💫",
+Urano:"Tu mente brilla con creatividad infinita 🌌",
+Neptuno:"Tu profundidad y sensibilidad iluminan el mundo 💙"
+
+};
+
+/* VERIFICAR CODIGO */
+
+function verificarCodigo(){
+
+const codigo = document.getElementById("codigo").value;
+
+if(!planetaSeleccionado) return;
+
+const nombre = planetaSeleccionado.userData.nombre;
+
+if(codigo === codigos[nombre]){
+
+document.getElementById("mensaje").innerHTML = frases[nombre];
+document.getElementById("mensaje").style.display="block";
+
+setTimeout(()=>{
+document.getElementById("mensaje").style.display="none";
+},5000);
+
+}else{
+
+alert("Código incorrecto");
+
+}
+
+}
+
+/* CLICK PLANETAS */
+
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+
+let planetaSeleccionado = null;
+
+window.addEventListener("click",function(event){
+
+if(event.target.closest("#menu")) return;
+
+mouse.x = (event.clientX/window.innerWidth)*2-1;
+mouse.y = -(event.clientY/window.innerHeight)*2+1;
+
+raycaster.setFromCamera(mouse,camera);
+
+const intersects = raycaster.intersectObjects(planetMeshes);
+
+if(intersects.length>0){
+
+const planeta = intersects[0].object;
+
+planetaSeleccionado = planeta;
+
+document.getElementById("planetName").innerText = planeta.userData.nombre;
+
+document.getElementById("menu").style.display="block";
+
+}else{
+
+planetaSeleccionado = null;
+
+document.getElementById("menu").style.display="none";
+
+}
+
+});
+
+/* ANIMACION */
+
+let angle=0;
+
+function animate(){
+
+requestAnimationFrame(animate);
+
+angle+=0.002;
+
+function orbita(p,v){
+
+p.mesh.position.x=Math.cos(angle*v)*p.dist;
+p.mesh.position.z=Math.sin(angle*v)*p.dist;
+
+p.mesh.rotation.y+=0.01;
+
+}
+
+orbita(mercury,4);
+orbita(venus,3);
+orbita(earth,2);
+orbita(mars,1.8);
+orbita(jupiter,1);
+orbita(saturn,0.8);
+orbita(uranus,0.6);
+orbita(neptune,0.5);
+
+/* LUNA */
+
+moonAngle += 0.03;
+
+moon.position.x =
+earth.mesh.position.x + Math.cos(moonAngle)*15;
+
+moon.position.z =
+earth.mesh.position.z + Math.sin(moonAngle)*15;
+
+moon.position.y =
+earth.mesh.position.y;
+
+/* ROTACION SOL */
+
+sun.rotation.y+=0.002;
+
+/* CAMARA */
+
+if(planetaSeleccionado){
+
+const offset=new THREE.Vector3(40,20,40);
+
+camera.position.copy(
+planetaSeleccionado.position.clone().add(offset)
+);
+
+controls.target.copy(planetaSeleccionado.position);
+
+}
+
+controls.update();
+
+renderer.render(scene,camera);
+
+}
+
+animate();
+
+</script>
+
+</body>
+</html>
